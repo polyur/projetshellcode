@@ -1,0 +1,74 @@
+asm 32 bits :
+.global main
+main:
+        push    $0x07
+        pop     %ebx
+        push    $0x01
+        pop     %eax
+        int     $0x80
+ as --32 aa.s -o hello.o
+ ld -m elf_i386 hello.o -o helloshell
+ objdump -d helloshell
+shellcode return 7 32 bits : \x6a\x07\x5b\x6a\x01\x58\xcd\x80
+
+#include <stdio.h>
+#include <string.h>
+#include <sys/mman.h>
+
+ //gcc (-m32) -z execstack testSC.c -o testSC
+
+ char shellcode[] = "\x6a\x07\x5b\x6a\x01\x58\xcd\x80";
+
+ void main() {
+     printf("shellcode length: %u\n", strlen(shellcode));
+
+         void * a = mmap(0, sizeof(shellcode), PROT_EXEC | PROT_READ |
+                             PROT_WRITE, MAP_ANONYMOUS | MAP_SHARED, -1, 0);
+
+                                 ((void (*)(void)) memcpy(a, shellcode, sizeof(shellcode)))();
+                                 }
+
+ gcc -m32 -z execstack testSC.c -o testSC
+
+Shellcode return 7 64 bits : \x6a\x01\x58\x6a\x01\x5f\x6a\x07\x5f\x6a\x0d\x5a\x0f\x05\x6a\x3c\x58\x0f\x05
+.global _start
+
+.text
+_start:
+push $1
+pop %rax
+push $1
+pop %rdi
+push $7
+pop  %rdi
+push  $13
+pop %rdx
+syscall
+
+push $60
+pop %rax
+syscall
+
+ as hello64.s -o hello64.o
+ ld hello64.o -o helloshell64
+ objdump -d helloshell64
+
+
+#include <stdio.h>
+#include <string.h>
+#include <sys/mman.h>
+
+ //gcc (-m32) -z execstack testSC.c -o testSC
+
+ char shellcode[] = "\x6a\x01\x58\x6a\x01\x5f\x6a\x07\x5f\x6a\x0d\x5a\x0f\x05\x6a\x3c\x58\x0f\x05";
+
+ void main() {
+     printf("shellcode length: %u\n", strlen(shellcode));
+
+         void * a = mmap(0, sizeof(shellcode), PROT_EXEC | PROT_READ |
+                             PROT_WRITE, MAP_ANONYMOUS | MAP_SHARED, -1, 0);
+
+                                 ((void (*)(void)) memcpy(a, shellcode, sizeof(shellcode)))();
+                                 }
+
+ gcc  -z execstack testSC64.c -o testSC64
